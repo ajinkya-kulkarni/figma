@@ -16,8 +16,16 @@ type BridgeResponse = {
   error?: string;
 };
 
+type ResizableSceneNode = SceneNode & {
+  resize(width: number, height: number): void;
+};
+
 function serializable(value: unknown): unknown {
   return value === figma.mixed ? "MIXED" : value;
+}
+
+function isResizable(node: SceneNode): node is ResizableSceneNode {
+  return "resize" in node && typeof node.resize === "function";
 }
 
 function summarize(node: SceneNode, depth: number): Record<string, unknown> {
@@ -30,9 +38,12 @@ function summarize(node: SceneNode, depth: number): Record<string, unknown> {
     width: node.width,
     height: node.height,
     visible: node.visible,
-    locked: node.locked,
-    opacity: node.opacity
+    locked: node.locked
   };
+
+  if ("opacity" in node) {
+    output.opacity = node.opacity;
+  }
 
   if (node.type === "TEXT") {
     output.text = {
@@ -177,6 +188,9 @@ async function execute(request: BridgeRequest): Promise<unknown> {
 
     case "resize": {
       const node = await resolveSceneNode(optionalString(params, "nodeId"));
+      if (!isResizable(node)) {
+        throw new Error(`${node.type} nodes cannot be resized by this bridge`);
+      }
       const width = optionalPositiveNumber(params, "width") ?? node.width;
       const height = optionalPositiveNumber(params, "height") ?? node.height;
       node.resize(width, height);
