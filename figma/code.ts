@@ -134,7 +134,7 @@ function optionalPositiveNumber(
 function boundedDepth(params: Record<string, unknown>, fallback: number): number {
   const value = params.depth;
   if (value === undefined) return fallback;
-  if (!Number.isInteger(value) || typeof value !== "number") {
+  if (typeof value !== "number" || !Number.isInteger(value)) {
     throw new Error("depth must be an integer");
   }
   return Math.max(0, Math.min(value, 8));
