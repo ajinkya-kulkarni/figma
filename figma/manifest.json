@@ -1,0 +1,16 @@
+{
+  "name": "OpenCode Bridge",
+  "id": "0",
+  "api": "1.0.0",
+  "editorType": ["figma"],
+  "main": "dist/code.js",
+  "ui": "ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"],
+    "devAllowedDomains": [
+      "ws://127.0.0.1:7331",
+      "ws://localhost:7331"
+    ]
+  }
+}
