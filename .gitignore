@@ -1,0 +1,5 @@
+node_modules/
+dist/
+figma/dist/
+.DS_Store
+*.log

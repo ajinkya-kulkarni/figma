@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root {
+        font-family: Inter, system-ui, sans-serif;
+        color-scheme: light dark;
+      }
+
+      body {
+        margin: 0;
+        padding: 12px;
+        font-size: 12px;
+      }
+
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        opacity: 0.45;
+      }
+
+      .connected .dot {
+        opacity: 1;
+      }
+
+      .muted {
+        margin-top: 6px;
+        opacity: 0.65;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="connection" class="row">
+      <span class="dot"></span>
+      <strong id="status">Waiting for OpenCode…</strong>
+    </div>
+    <div class="muted">Keep this plugin open while using the Figma MCP tools.</div>
+
+    <script>
+      const connection = document.getElementById("connection");
+      const status = document.getElementById("status");
+      let socket = null;
+      let retryMs = 500;
+
+      function setStatus(text, connected) {
+        status.textContent = text;
+        connection.classList.toggle("connected", Boolean(connected));
+      }
+
+      function connect() {
+        setStatus("Connecting…", false);
+        const next = new WebSocket("ws://127.0.0.1:7331");
+        socket = next;
+
+        next.onopen = () => {
+          retryMs = 500;
+          setStatus("Connected to OpenCode", true);
+        };
+
+        next.onmessage = (event) => {
+          try {
+            const request = JSON.parse(event.data);
+            parent.postMessage(
+              {
+                pluginMessage: {
+                  type: "bridge-request",
+                  request
+                }
+              },
+              "*"
+            );
+          } catch (error) {
+            console.error("Invalid bridge request", error);
+          }
+        };
+
+        next.onerror = () => {
+          next.close();
+        };
+
+        next.onclose = () => {
+          if (socket !== next) return;
+          socket = null;
+          setStatus("Waiting for OpenCode…", false);
+          const delay = retryMs;
+          retryMs = Math.min(retryMs * 2, 5000);
+          window.setTimeout(connect, delay);
+        };
+      }
+
+      window.onmessage = (event) => {
+        const message = event.data && event.data.pluginMessage;
+        if (message?.type !== "bridge-response") return;
+        if (!socket || socket.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify(message.response));
+      };
+
+      connect();
+    </script>
+  </body>
+</html>

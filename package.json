@@ -1,0 +1,32 @@
+{
+  "name": "opencode-figma-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Live bridge between OpenCode and the active Figma document.",
+  "scripts": {
+    "build": "npm run build:plugin && npm run build:mcp",
+    "build:plugin": "esbuild figma/code.ts --bundle --format=iife --target=es2020 --outfile=figma/dist/code.js",
+    "build:mcp": "esbuild src/mcp.ts --bundle --platform=node --format=esm --target=node20 --packages=external --outfile=dist/mcp.js",
+    "watch:plugin": "esbuild figma/code.ts --bundle --format=iife --target=es2020 --outfile=figma/dist/code.js --watch",
+    "typecheck": "npm run typecheck:plugin && npm run typecheck:server",
+    "typecheck:plugin": "tsc -p tsconfig.plugin.json --noEmit",
+    "typecheck:server": "tsc -p tsconfig.server.json --noEmit",
+    "check": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "ws": "^8.21.3",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.136.0",
+    "@types/node": "^24.0.0",
+    "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.0",
+    "typescript": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
